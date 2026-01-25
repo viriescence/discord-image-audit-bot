@@ -1,0 +1,7 @@
+discord.py
+pillow
+imagehash
+aiosqlite
+aiohttp
+python-dotenv
+
