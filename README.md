@@ -24,4 +24,3 @@ instead of spamming the channel where the image was posted.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-
