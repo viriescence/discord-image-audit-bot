@@ -10,6 +10,11 @@ from PIL import Image
 import imagehash
 from dotenv import load_dotenv
 
+from collections import defaultdict
+import asyncio
+import time
+
+
 
 # -----------------------
 # Config
@@ -23,6 +28,25 @@ SIMILARITY_THRESHOLD = int(os.getenv("SIMILARITY_THRESHOLD", "8"))  # lower = st
 
 if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN not found in .env")
+
+# ------------------
+# Audit throttle helper
+# ------------------
+import time
+import asyncio
+
+AUDIT_COOLDOWN_SECONDS = float(os.getenv("AUDIT_COOLDOWN_SECONDS", "1.0"))
+_last_audit_sent_at = 0.0
+
+async def send_audit_throttled(channel, content: str):
+    global _last_audit_sent_at
+    now = time.time()
+    wait = (_last_audit_sent_at + AUDIT_COOLDOWN_SECONDS) - now
+    if wait > 0:
+        await asyncio.sleep(wait)
+    await channel.send(content)
+    _last_audit_sent_at = time.time()
+
 
 
 # -----------------------
@@ -175,6 +199,10 @@ async def on_message(message: discord.Message):
         name=AUDIT_CHANNEL_NAME,
     )
 
+    alerts = []
+    seen_in_message = {}  # (phash, dhash) -> count
+
+
     # Process each image attachment
     for att in message.attachments:
         if not is_image_attachment(att):
@@ -212,27 +240,41 @@ async def on_message(message: discord.Message):
                 dhash_hex=new_dhash,
             )
 
-            # Alert if similar
-            if audit_channel and best_match and best_score <= SIMILARITY_THRESHOLD:
-                await audit_channel.send(
-                    "\n".join(
-                        [
-                            "⚠️ **Possible near-duplicate detected**",
-                            f"**New:** {message.author.mention} in {message.channel.mention} — `{att.filename}`",
-                            f"**Match score:** `{best_score}` (threshold `{SIMILARITY_THRESHOLD}`; lower = more similar)",
-                            f"**New image:** {att.url}",
-                            "",
-                            f"**Closest previous:** `{best_match['filename']}` by **{best_match['author_name']}**",
-                            f"**Previous image:** {best_match['attachment_url']}",
-                        ]
-                    )
-                )
-
+            # Alert if similar (collect; send once after loop)
+            if best_match and best_score <= SIMILARITY_THRESHOLD:
+                alerts.append({
+                    "filename": att.filename or "unknown",
+                    "url": att.url,
+                    "score": best_score,
+                    "best": best_match,
+                })
+                                      
+            
         except Exception as e:
             if audit_channel:
-                await audit_channel.send(f"❌ Error processing `{att.filename}`: `{type(e).__name__}: {e}`")
+                await send_audit_throttled(
+                    audit_channel,
+                    f"❌ Error processing `{att.filename}`: {type(e).__name__}: {e}"
+)
+
             else:
                 print(f"Error processing {att.filename}: {e}")
 
+            # ✅ SEND ONCE, after loop ends
+            if alerts and audit_channel:
+                lines = ["⚠️ **Possible near-duplicate images detected**"]
+                lines.append(f"Posted by {message.author.mention} in {message.channel.mention}")
+
+                for a in alerts:
+                    lines.extend([
+                        "",
+                        f"**File:** {a['filename']}",
+                        f"**Match score:** {a['score']} (≤ {SIMILARITY_THRESHOLD} = similar)",
+                        f"**New image:** {a['url']}",
+                        f"**Closest previous:** {a['best']['filename']} by **{a['best']['author_name']}**",
+                        f"**Previous image:** {a['best']['attachment_url']}",
+                    ])
+
+                await send_audit_throttled(audit_channel, "\n".join(lines))
 
 client.run(TOKEN)
