@@ -1,15 +1,17 @@
 import os
+from pathlib import Path
 import discord
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load .env from project root (one level above /src)
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv (env_path)
 
 TOKEN = os.getenv ("DISCORD_TOKEN")
-AUDIT_CHANNEL_NAME = os.getenv ("AUDIT_CHANNEL_NAME", "audit")
-
 if not TOKEN:
-    raise RuntimeError("DISCORD_TOKEN not found in .env")
+    raise RuntimeError ("DISCORD_TOKEN not found in .env")
+
+AUDIT_CHANNEL_NAME = os.getenv ("AUDIT_CHANNEL_NAME", "audit")
 
 intents = discord.Intents.default()
 intents.message_content = True
