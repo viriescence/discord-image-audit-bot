@@ -67,5 +67,3 @@ DISCORD_TOKEN=your_bot_token_here
 AUDIT_CHANNEL_NAME=audit
 SIMILARITY_THRESHOLD=8
 DB_PATH=output/audit.sqlite
-
-
