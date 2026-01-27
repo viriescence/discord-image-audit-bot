@@ -2,7 +2,7 @@
 
 A Discord bot that detects **near-duplicate images** using **perceptual hashing**
 (dHash + pHash) and logs results to a dedicated **audit channel** (e.g. `#audit`)
-instead of spamming the channel where the image was posted.
+instead of spamming the channel where the image was posted. Owner(s) or admin(s) can take action based on these reports.
 
 ---
 
