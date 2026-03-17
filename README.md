@@ -6,7 +6,7 @@ instead of spamming the channel where the image was posted. Owner(s) or admin(s)
 
 ---
 
-## 🚀 Features (Current)
+## Features (Current)
 
 - Watches for new **image attachments** posted in a server
 - Computes perceptual hashes (**dHash + pHash**) for each image
@@ -19,7 +19,7 @@ instead of spamming the channel where the image was posted. Owner(s) or admin(s)
 
 ---
 
-## 🧠 How It Works (High Level)
+## How It Works (High Level)
 
 1. Detect image attachments in messages
 2. Download image bytes
@@ -32,7 +32,7 @@ instead of spamming the channel where the image was posted. Owner(s) or admin(s)
 
 ---
 
-## 🚦 Alert Batching (Important)
+## Alert Batching (Important)
 
 If a user uploads **multiple images in a single message**, the bot:
 
@@ -47,7 +47,7 @@ This prevents:
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 - **Python**
 - **discord.py**
@@ -58,7 +58,7 @@ This prevents:
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Create a `.env` file (never commit this, obviously.):
 
